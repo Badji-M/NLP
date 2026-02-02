@@ -1,0 +1,7 @@
+joblib
+scikit-learn
+sklearn-crfsuite
+seqeval
+fastapi
+uvicorn
+pydantic
