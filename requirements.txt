@@ -5,3 +5,6 @@ seqeval
 fastapi
 uvicorn
 pydantic
+python-multipart
+pdfplumber
+python-docx
