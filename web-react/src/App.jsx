@@ -45,7 +45,7 @@ export default function App() {
       const data = await res.json();
       setResult(data);
     } catch (e) {
-      setError("Impossible de se connecter à l'API. Vérifiez que l'API est démarrée sur http://localhost:8000");
+      setError(`Impossible de se connecter à l'API (${API_BASE}). Vérifiez la connexion.`);
     } finally {
       setLoading(false);
     }
