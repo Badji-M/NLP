@@ -16,7 +16,11 @@ from pydantic import BaseModel
 
 from src.features import sent2features
 
-app = FastAPI(title="NER API")
+app = FastAPI(
+    title="NER API",
+    description="API de reconnaissance d'entités nommées (NER) en français avec CRF",
+    version="1.0.0"
+)
 
 raw_origins = os.getenv("CORS_ALLOW_ORIGINS", "http://localhost:5173,http://localhost:3000")
 origins = [o.strip() for o in raw_origins.split(",") if o.strip()]
@@ -32,6 +36,22 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
+
+
+@app.get("/")
+def root():
+    """Page d'accueil de l'API NER"""
+    return {
+        "message": "API NER - Reconnaissance d'entités nommées en français",
+        "version": "1.0.0",
+        "endpoints": {
+            "POST /predict": "Prédiction sur des tokens (liste de mots)",
+            "POST /predict-text": "Prédiction sur un texte brut",
+            "POST /predict-file": "Prédiction sur un fichier (PDF, DOCX, TXT)"
+        },
+        "documentation": "/docs",
+        "status": "online"
+    }
 
 MODEL_PATH = Path("models") / "ner_model_best.joblib"
 FALLBACK_MODEL_PATH = Path("models") / "ner_model.joblib"
