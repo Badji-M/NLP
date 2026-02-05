@@ -5,6 +5,8 @@ from typing import List, Tuple
 
 import re
 
+import os
+
 import joblib
 import pdfplumber
 from docx import Document
@@ -16,10 +18,17 @@ from src.features import sent2features
 
 app = FastAPI(title="NER API")
 
+raw_origins = os.getenv("CORS_ALLOW_ORIGINS", "http://localhost:5173,http://localhost:3000")
+origins = [o.strip() for o in raw_origins.split(",") if o.strip()]
+allow_credentials = True
+if "*" in origins:
+    origins = ["*"]
+    allow_credentials = False
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
-    allow_credentials=True,
+    allow_origins=origins,
+    allow_credentials=allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"]
 )
