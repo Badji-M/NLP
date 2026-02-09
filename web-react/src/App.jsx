@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 
-const API_BASE = "http://localhost:8000";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
 const hashToHue = (str) => {
   let hash = 0;
@@ -45,7 +45,7 @@ export default function App() {
       const data = await res.json();
       setResult(data);
     } catch (e) {
-      setError("Impossible de se connecter à l'API. Vérifiez que l'API est démarrée sur http://localhost:8000");
+      setError(`Impossible de se connecter à l'API (${API_BASE}). Vérifiez la connexion.`);
     } finally {
       setLoading(false);
     }
