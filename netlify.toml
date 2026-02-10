@@ -1,7 +1,7 @@
 [build]
   base = "web-react/"
   command = "npm run build"
-  publish = "web-react/dist"
+  publish = "dist"
 
 [build.environment]
   NODE_VERSION = "18"
