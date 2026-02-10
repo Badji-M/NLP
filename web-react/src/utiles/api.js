@@ -1,4 +1,4 @@
-const API_BASE = "http://127.0.0.1:8001";
+const API_BASE = "https://nlp-4g9u.onrender.com";
 
 export const analyzeText = async (text) => {
   const response = await fetch(`${API_BASE}/predict-enhanced`, {

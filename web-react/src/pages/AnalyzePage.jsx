@@ -189,7 +189,7 @@ Pour toute question, consultez la documentation complète.`
 
   // Télécharger le modèle
   const downloadModel = () => {
-    window.location.href = 'http://localhost:8000/models/ner_model.joblib'
+    window.location.href = 'https://nlp-4g9u.onrender.com/models/ner_model.joblib'
   }
 
   return (

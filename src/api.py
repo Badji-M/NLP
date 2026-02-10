@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import List, Tuple, Dict
 import re
+import os
 import joblib
 import pdfplumber
 from docx import Document
@@ -21,9 +22,13 @@ from src.features import sent2features
 
 app = FastAPI(title="NER API")
 
+# Configuration CORS depuis variable d'environnement ou valeurs par défaut
+raw_origins = os.getenv("CORS_ALLOW_ORIGINS", "http://localhost:5173,http://localhost:5175,http://localhost:3000")
+origins = [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5175", "http://localhost:3000"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]

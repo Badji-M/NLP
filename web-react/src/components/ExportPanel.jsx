@@ -26,7 +26,7 @@ export default function ExportPanel({ text, entities, statistics }) {
   const exportPDF = async () => {
     setExporting(true);
     try {
-      const response = await fetch('http://localhost:8000/export-pdf', {
+      const response = await fetch('https://nlp-4g9u.onrender.com/export-pdf', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
