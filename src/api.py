@@ -170,28 +170,47 @@ def tokenize_text(text: str) -> List[str]:
 
 
 def extract_text_from_pdf(file_path: Path) -> str:
-    """Extrait le texte d'un PDF avec encodage UTF-8"""
-    text_parts: List[str] = []
-    with pdfplumber.open(file_path) as pdf:
-        for page in pdf.pages:
-            page_text = page.extract_text()
-            if page_text:
-                # Nettoyer et normaliser le texte
-                page_text = page_text.encode("utf-8", errors="ignore").decode("utf-8")
-                text_parts.append(page_text)
-    return "\n".join(text_parts)
+    """Extrait le texte d'un PDF avec encodage UTF-8 et gestion d'erreur"""
+    try:
+        text_parts: List[str] = []
+        with pdfplumber.open(file_path) as pdf:
+            if not pdf.pages:
+                raise ValueError("Le PDF est vide")
+            for page in pdf.pages:
+                try:
+                    page_text = page.extract_text()
+                    if page_text:
+                        # Nettoyer et normaliser le texte
+                        page_text = page_text.encode("utf-8", errors="ignore").decode(
+                            "utf-8"
+                        )
+                        text_parts.append(page_text)
+                except Exception as e:
+                    print(f"⚠️ Erreur extraction page: {e}")
+                    continue
+        return "\n".join(text_parts) if text_parts else "Aucun texte trouvé"
+    except Exception as e:
+        raise ValueError(f"Erreur PDF: {str(e)}")
 
 
 def extract_text_from_docx(file_path: Path) -> str:
-    """Extrait le texte d'un fichier Word avec encodage UTF-8"""
-    doc = Document(file_path)
+    """Extrait le texte d'un fichier Word avec gestion d'erreurs"""
+    try:
+        doc = Document(file_path)
+    except Exception as e:
+        raise ValueError(f"Erreur lecture DOCX: {{str(e)}}")
+
     # Normaliser l'encodage pour éviter les problèmes d'affichage
     paragraphs = []
     for p in doc.paragraphs:
         if p.text:
-            text = p.text.encode("utf-8", errors="ignore").decode("utf-8")
-            paragraphs.append(text)
-    return "\n".join(paragraphs)
+            try:
+                text = p.text.encode("utf-8", errors="ignore").decode("utf-8")
+                paragraphs.append(text)
+            except Exception as e:
+                print(f"⚠️ Erreur paragraphe: {e}")
+                continue
+    return "\n".join(paragraphs) if paragraphs else "Aucun texte trouvé"
 
 
 def predict_tokens(tokens: List[str]) -> Tuple[List[str], List[str]]:
@@ -249,22 +268,46 @@ async def predict_file(file: UploadFile = File(...)) -> PredictResponse:
             status_code=400, detail="Format non supporté. Utilisez PDF, DOCX ou TXT."
         )
 
+    # Lire le contenu du fichier
+    content = await file.read()
+
+    # Valider la taille (max 50 MB)
+    if len(content) > 50_000_000:
+        raise HTTPException(status_code=400, detail="Fichier trop volumineux (> 50MB)")
+
+    # Écrire dans un fichier temporaire
     tmp_dir = Path(".tmp")
     tmp_dir.mkdir(exist_ok=True)
     tmp_path = tmp_dir / file.filename
 
-    content = await file.read()
-    tmp_path.write_bytes(content)
+    try:
+        tmp_path.write_bytes(content)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur écriture: {{str(e)}}")
 
-    if suffix == ".pdf":
-        text = extract_text_from_pdf(tmp_path)
-    elif suffix == ".docx":
-        text = extract_text_from_docx(tmp_path)
-    else:
+    # Extraire le texte avec gestion d'erreur
+    try:
+        if suffix == ".pdf":
+            text = extract_text_from_pdf(tmp_path)
+        elif suffix == ".docx":
+            text = extract_text_from_docx(tmp_path)
+        else:  # .txt
+            try:
+                text = content.decode("utf-8")
+            except UnicodeDecodeError:
+                text = content.decode("latin-1")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Erreur lecture fichier: {{str(e)}}"
+        )
+    finally:
+        # Nettoyer le fichier temporaire
         try:
-            text = content.decode("utf-8")
-        except UnicodeDecodeError:
-            text = content.decode("latin-1")
+            tmp_path.unlink()
+        except Exception:
+            pass
 
     tokens = tokenize_text(text)
     tokens, labels = predict_tokens(tokens)
