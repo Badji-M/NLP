@@ -8,7 +8,7 @@
 ![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![Deployment](https://img.shields.io/badge/deploy-success-brightgreen?style=for-the-badge&logo=netlify)
 
-** [Live Demo](https://nlp-ner.netlify.app) | 📚 [API Docs](https://nlp-4g9u.onrender.com/docs) |  [Performance Metrics](#performance)**
+** [Live Demo](https://nlp-ner.netlify.app) |  [API Docs](https://nlp-4g9u.onrender.com/docs) |  [Performance Metrics](#performance)**
 
 </div>
 
@@ -20,13 +20,13 @@ Système de **Reconnaissance des Entités Nommées (NER)** avancé pour le fran�
 
 ### ✨ Fonctionnalités
 
-- 🎯 **Détection d'entités** - Personnes, Lieux, Organisations, etc.
-- 📊 **Analyse statistique** - Métriques détaillées et visualisations
-- 📄 **Export multi-format** - PDF, JSON, CSV
-- 🌐 **Interface moderne** - React + Vite
-- 🔧 **API RESTful** - FastAPI avec documentation interactive
-- 🚀 **CI/CD automatisé** - GitHub Actions
-- 🔒 **Sécurité** - Analyse de vulnérabilités automatique
+-  **Détection d'entités** - Personnes, Lieux, Organisations, etc.
+-  **Analyse statistique** - Métriques détaillées et visualisations
+-  **Export multi-format** - PDF, JSON, CSV
+-  **Interface moderne** - React + Vite
+-  **API RESTful** - FastAPI avec documentation interactive
+-  **CI/CD automatisé** - GitHub Actions
+-  **Sécurité** - Analyse de vulnérabilités automatique
 
 ## Structure
 
