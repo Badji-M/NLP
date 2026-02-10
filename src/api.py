@@ -17,8 +17,7 @@ from pydantic import BaseModel
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-from reportlab.platypus import (Paragraph, SimpleDocTemplate, Spacer, Table,
-                                TableStyle)
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from src.features import sent2features
 
