@@ -1,4 +1,4 @@
-# 🎯 NER MultiCoNER - Named Entity Recognition
+#  NER MultiCoNER - Named Entity Recognition
 
 <div align="center">
 
@@ -8,7 +8,7 @@
 ![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![Deployment](https://img.shields.io/badge/deploy-success-brightgreen?style=for-the-badge&logo=netlify)
 
-**🚀 [Live Demo](https://nlp-ner.netlify.app) | 📚 [API Docs](https://nlp-4g9u.onrender.com/docs) | 📊 [Performance Metrics](#performance)**
+** [Live Demo](https://nlp-ner.netlify.app) | 📚 [API Docs](https://nlp-4g9u.onrender.com/docs) |  [Performance Metrics](#performance)**
 
 </div>
 
