@@ -23,7 +23,7 @@ def predict_logreg(model, sentences: List[List[str]]):
     preds = []
     idx = 0
     for sent in sentences:
-        preds.append(list(all_preds[idx:idx + len(sent)]))
+        preds.append(list(all_preds[idx : idx + len(sent)]))
         idx += len(sent)
     return preds
 
