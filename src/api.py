@@ -1,22 +1,24 @@
 from __future__ import annotations
 
-from pathlib import Path
-from typing import List, Tuple, Dict
-import re
+import io
 import os
+import re
+from pathlib import Path
+from typing import Dict, List, Tuple
+
 import joblib
 import pdfplumber
 from docx import Document
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response, FileResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-import io
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.platypus import (Paragraph, SimpleDocTemplate, Spacer, Table,
+                                TableStyle)
 
 from src.features import sent2features
 

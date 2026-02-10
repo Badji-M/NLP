@@ -8,7 +8,6 @@ import joblib
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
-
 from sklearn_crfsuite import CRF
 
 from src.conll import read_conll
