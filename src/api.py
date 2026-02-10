@@ -176,7 +176,7 @@ def extract_text_from_pdf(file_path: Path) -> str:
             page_text = page.extract_text()
             if page_text:
                 # Nettoyer et normaliser le texte
-                page_text = page_text.encode('utf-8', errors='ignore').decode('utf-8')
+                page_text = page_text.encode("utf-8", errors="ignore").decode("utf-8")
                 text_parts.append(page_text)
     return "\n".join(text_parts)
 
@@ -188,7 +188,7 @@ def extract_text_from_docx(file_path: Path) -> str:
     paragraphs = []
     for p in doc.paragraphs:
         if p.text:
-            text = p.text.encode('utf-8', errors='ignore').decode('utf-8')
+            text = p.text.encode("utf-8", errors="ignore").decode("utf-8")
             paragraphs.append(text)
     return "\n".join(paragraphs)
 

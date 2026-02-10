@@ -8,6 +8,7 @@ __pycache__/
 venv/
 env/
 ENV/
+*_backup.py
 
 # Models (optional - décommenter si trop volumineux pour GitHub)
 # models/*.joblib
