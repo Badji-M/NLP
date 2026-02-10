@@ -3,8 +3,9 @@ scikit-learn
 sklearn-crfsuite
 seqeval
 fastapi
-uvicorn
+uvicorn[standard]
 pydantic
 python-multipart
 pdfplumber
 python-docx
+reportlab
