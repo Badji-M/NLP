@@ -11,7 +11,9 @@
 ** [Live Demo](https://nlp-ner.netlify.app) |  [API Docs](https://nlp-4g9u.onrender.com/docs) |  [Performance Metrics](#performance)**
 
 </div>
-
+<div align="center">
+[Support de présentation CANVA]([https://nlp-ner.netlify.app](https://www.canva.com/design/DAHA3mGaOmc/XZGzKgxzOv7xgqywnM1tiQ/edit?utm_content=DAHA3mGaOmc&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton))
+</div>
 ---
 
 ## 📖 À propos
