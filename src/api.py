@@ -186,7 +186,7 @@ def extract_text_from_pdf(file_path: Path) -> str:
                         )
                         text_parts.append(page_text)
                 except Exception as e:
-                    print(f"⚠️ Erreur extraction page: {e}")
+                    print(f" Erreur extraction page: {e}")
                     continue
         return "\n".join(text_parts) if text_parts else "Aucun texte trouvé"
     except Exception as e:
@@ -198,7 +198,7 @@ def extract_text_from_docx(file_path: Path) -> str:
     try:
         doc = Document(file_path)
     except Exception as e:
-        raise ValueError(f"Erreur lecture DOCX: {{str(e)}}")
+        raise ValueError(f"Erreur lecture DOCX: {str(e)}")
 
     # Normaliser l'encodage pour éviter les problèmes d'affichage
     paragraphs = []
@@ -208,7 +208,7 @@ def extract_text_from_docx(file_path: Path) -> str:
                 text = p.text.encode("utf-8", errors="ignore").decode("utf-8")
                 paragraphs.append(text)
             except Exception as e:
-                print(f"⚠️ Erreur paragraphe: {e}")
+                print(f" Erreur paragraphe: {e}")
                 continue
     return "\n".join(paragraphs) if paragraphs else "Aucun texte trouvé"
 
@@ -283,7 +283,7 @@ async def predict_file(file: UploadFile = File(...)) -> PredictResponse:
     try:
         tmp_path.write_bytes(content)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur écriture: {{str(e)}}")
+        raise HTTPException(status_code=500, detail=f"Erreur écriture: {str(e)}")
 
     # Extraire le texte avec gestion d'erreur
     try:
@@ -300,7 +300,7 @@ async def predict_file(file: UploadFile = File(...)) -> PredictResponse:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Erreur lecture fichier: {{str(e)}}"
+            status_code=500, detail=f"Erreur lecture fichier: {str(e)}"
         )
     finally:
         # Nettoyer le fichier temporaire
