@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { FaSync, FaDownload } from 'react-icons/fa'
+import { FaSync, FaDownload, FaExclamationCircle, FaCheckCircle } from 'react-icons/fa'
 import Results from '../components/Analyze/Results'
 import Statistics from '../components/Analyze/Statistics'
 import Charts from '../components/Analyze/Charts'
-import { analyzeText } from '../utiles/api'
+import { analyzeText, analyzeFile } from '../utiles/api'
 import './AnalyzePage.css'
 
 export default function AnalyzePage() {
@@ -14,6 +14,8 @@ export default function AnalyzePage() {
   const [loading, setLoading] = useState(false)
   const [results, setResults] = useState(null)
   const [viewMode, setViewMode] = useState('visual')
+  const [isDragging, setIsDragging] = useState(false)
+  const [message, setMessage] = useState(null) // { type: 'success|error', text: '...' }
 
   const examples = [
     {
@@ -40,47 +42,101 @@ export default function AnalyzePage() {
     })
   }
 
-  // Gérer l'importation de fichier
+  // Gérer l'importation de fichier (TXT, PDF, DOCX)
   const handleFileSelect = async (selectedFile) => {
+    const fileExt = selectedFile.name.toLowerCase().split('.').pop()
+    
+    // Valider le format
+    if (!['txt', 'pdf', 'docx'].includes(fileExt)) {
+      setMessage({ type: 'error', text: 'Format non supporté. Utilisez TXT, PDF ou DOCX.' })
+      setTimeout(() => setMessage(null), 5000)
+      return
+    }
+
+    // Valider la taille (max 50 MB)
+    if (selectedFile.size > 50_000_000) {
+      setMessage({ type: 'error', text: 'Fichier trop volumineux (> 50 MB)' })
+      setTimeout(() => setMessage(null), 5000)
+      return
+    }
+
     setFile(selectedFile)
     setFileName(selectedFile.name)
-    try {
-      const content = await readFileContent(selectedFile)
-      setText(content)
-      setActiveTab('file')
-    } catch (error) {
-      console.error('Erreur lors de la lecture du fichier:', error)
-      alert('Erreur lors de la lecture du fichier')
+    setMessage({ type: 'success', text: `Fichier chargé: ${selectedFile.name}` })
+    setTimeout(() => setMessage(null), 3000)
+    setActiveTab('file')
+  }
+
+  // Handlers pour drag-drop
+  const handleDragOver = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+    
+    const droppedFiles = e.dataTransfer.files
+    if (droppedFiles.length > 0) {
+      handleFileSelect(droppedFiles[0])
     }
   }
 
   // Analyser le texte
   const handleAnalyze = async () => {
-    const textToAnalyze = text.trim()
-    if (!textToAnalyze) {
-      alert('Veuillez entrer du texte ou importer un fichier')
+    let dataToAnalyze = null
+    
+    // Si on a un fichier PDF/DOCX, l'envoyer à l'API
+    if (file && ['pdf', 'docx'].includes(file.name.toLowerCase().split('.').pop())) {
+      dataToAnalyze = { type: 'file', data: file }
+    } else if (text.trim()) {
+      dataToAnalyze = { type: 'text', data: text }
+    } else {
+      setMessage({ type: 'error', text: 'Veuillez entrer du texte ou importer un fichier' })
+      setTimeout(() => setMessage(null), 3000)
       return
     }
 
     setLoading(true)
+    setMessage(null)
     try {
-      const data = await analyzeText(textToAnalyze)
-      setResults(data)
+      let result
+      if (dataToAnalyze.type === 'file') {
+        result = await analyzeFile(dataToAnalyze.data)
+      } else {
+        result = await analyzeText(dataToAnalyze.data)
+      }
+      
+      setResults(result)
+      setMessage({ type: 'success', text: 'Analyse réussie ! 🎉' })
+      setTimeout(() => setMessage(null), 3000)
       
       // Sauvegarder dans l'historique
       const history = JSON.parse(localStorage.getItem('ner_history') || '[]')
       const newItem = {
         id: Date.now().toString(),
-        text: textToAnalyze,
-        results: data,
+        text: dataToAnalyze.type === 'file' ? `[Fichier: ${file.name}]` : dataToAnalyze.data,
+        results: result,
         date: new Date().toISOString()
       }
-      history.unshift(newItem) // Ajouter au début
-      if (history.length > 50) history.pop() // Limiter à 50 éléments
+      history.unshift(newItem)
+      if (history.length > 50) history.pop()
       localStorage.setItem('ner_history', JSON.stringify(history))
     } catch (error) {
       console.error('Erreur d\'analyse:', error)
-      alert('Erreur lors de l\'analyse. Vérifiez que l\'API est accessible.')
+      const errorMsg = error.message.includes('API error') 
+        ? 'Erreur API. Vérifiez que le serveur est accessible.'
+        : error.message
+      setMessage({ type: 'error', text: `Erreur: ${errorMsg}` })
     } finally {
       setLoading(false)
     }
@@ -194,6 +250,15 @@ Pour toute question, consultez la documentation complète.`
 
   return (
     <div className="analyze-page">
+      {/* Toast Messages */}
+      {message && (
+        <div className={`toast-message ${message.type}`}>
+          {message.type === 'error' && <FaExclamationCircle />}
+          {message.type === 'success' && <FaCheckCircle />}
+          <span>{message.text}</span>
+        </div>
+      )}
+
       {/* Header */}
       <div className="page-header">
         <h1>Analyse de Texte NER</h1>
@@ -237,10 +302,16 @@ Pour toute question, consultez la documentation complète.`
 
               {activeTab === 'file' && (
                 <div className="file-section">
-                  <div className="file-upload-zone" onClick={() => document.getElementById('file-input').click()}>
+                  <div 
+                    className={`file-upload-zone ${isDragging ? 'dragging' : ''}`}
+                    onClick={() => document.getElementById('file-input').click()}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                  >
                     <p>Cliquez ou glissez un fichier</p>
-                    <small>Formats: .txt, .pdf, .docx</small>
-                    {fileName && <p className="file-name">{fileName}</p>}
+                    <small>Formats: .txt, .pdf, .docx (max 50 MB)</small>
+                    {fileName && <p className="file-name">✓ {fileName}</p>}
                   </div>
                   <input
                     id="file-input"
