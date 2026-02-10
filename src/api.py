@@ -299,9 +299,7 @@ async def predict_file(file: UploadFile = File(...)) -> PredictResponse:
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Erreur lecture fichier: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Erreur lecture fichier: {str(e)}")
     finally:
         # Nettoyer le fichier temporaire
         try:
