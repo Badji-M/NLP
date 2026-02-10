@@ -12,12 +12,12 @@ from src.features import sent2features
 MODEL_PATH = Path("models") / "ner_model.joblib"
 
 if not MODEL_PATH.exists():
-    print("❌ Modèle non trouvé. Exécutez d'abord le notebook pour l'entraîner.")
+    print(" Modèle non trouvé. Exécutez d'abord le notebook pour l'entraîner.")
     sys.exit(1)
 
-print("📦 Chargement du modèle...")
+print(" Chargement du modèle...")
 model = joblib.load(MODEL_PATH)
-print("✅ Modèle chargé !")
+print(" Modèle chargé !")
 
 # Fonction de prédiction
 def predict_ner(text: str):
@@ -41,7 +41,7 @@ exemples = [
 ]
 
 for i, texte in enumerate(exemples, 1):
-    print(f"\n🔹 Exemple {i}: {texte}")
+    print(f"\n Exemple {i}: {texte}")
     print("-" * 70)
     
     resultats = predict_ner(texte)
@@ -57,6 +57,6 @@ for i, texte in enumerate(exemples, 1):
         print("  Aucune entité détectée")
 
 print("\n" + "=" * 70)
-print("\n💡 Pour utiliser l'API web, lancez: start_api.bat")
+print("\n Pour utiliser l'API web, lancez: start_api.bat")
 print("   Puis ouvrez: web/index.html")
 print("=" * 70)

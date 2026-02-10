@@ -11,6 +11,7 @@ ENV/
 
 # Models (optional - décommenter si trop volumineux pour GitHub)
 # models/*.joblib
+models/spacy_ner_final/
 
 # Temporary files
 .tmp/
@@ -31,3 +32,7 @@ build/
 # OS
 .DS_Store
 Thumbs.db
+
+
+
+
