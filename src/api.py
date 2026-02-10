@@ -23,7 +23,10 @@ from src.features import sent2features
 app = FastAPI(title="NER API")
 
 # Configuration CORS depuis variable d'environnement ou valeurs par défaut
-raw_origins = os.getenv("CORS_ALLOW_ORIGINS", "http://localhost:5173,http://localhost:5175,http://localhost:3000")
+raw_origins = os.getenv(
+    "CORS_ALLOW_ORIGINS",
+    "http://localhost:5173,http://localhost:5175,http://localhost:3000",
+)
 origins = [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
 
 app.add_middleware(
@@ -31,7 +34,7 @@ app.add_middleware(
     allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
 
 # Serve static files (models, documents, etc.)
@@ -71,20 +74,24 @@ def extract_entities(tokens: List[str], labels: List[str]) -> List[Dict]:
     current_entity = None
 
     for i, (token, label) in enumerate(zip(tokens, labels)):
-        if label.startswith('B-'):
+        if label.startswith("B-"):
             if current_entity:
                 entities.append(current_entity)
             current_entity = {
-                'text': token,
-                'label': label[2:],  # Enlève le préfixe B-
-                'start': i,
-                'end': i,
-                'tokens': [token]
+                "text": token,
+                "label": label[2:],  # Enlève le préfixe B-
+                "start": i,
+                "end": i,
+                "tokens": [token],
             }
-        elif label.startswith('I-') and current_entity and label[2:] == current_entity['label']:
-            current_entity['text'] += ' ' + token
-            current_entity['end'] = i
-            current_entity['tokens'].append(token)
+        elif (
+            label.startswith("I-")
+            and current_entity
+            and label[2:] == current_entity["label"]
+        ):
+            current_entity["text"] += " " + token
+            current_entity["end"] = i
+            current_entity["tokens"].append(token)
         else:
             if current_entity:
                 entities.append(current_entity)
@@ -104,7 +111,7 @@ def calculate_statistics(entities: List[Dict], total_tokens: int) -> Dict:
     # Comptage par type
     label_counts = {}
     for entity in entities:
-        label = entity['label']
+        label = entity["label"]
         label_counts[label] = label_counts.get(label, 0) + 1
 
     # Calcul des pourcentages
@@ -112,19 +119,31 @@ def calculate_statistics(entities: List[Dict], total_tokens: int) -> Dict:
     stats = []
     for label, count in label_counts.items():
         # Calcul du nombre de tokens pour ce label
-        token_count = sum(len(e['tokens']) for e in entities if e['label'] == label)
-        stats.append({
-            'label': label,
-            'count': count,
-            'percentage': round((count / total_entities) * 100, 1) if total_entities > 0 else 0,
-            'token_percentage': round((token_count / total_tokens) * 100, 1) if total_tokens > 0 else 0
-        })
+        token_count = sum(len(e["tokens"]) for e in entities if e["label"] == label)
+        stats.append(
+            {
+                "label": label,
+                "count": count,
+                "percentage": (
+                    round((count / total_entities) * 100, 1)
+                    if total_entities > 0
+                    else 0
+                ),
+                "token_percentage": (
+                    round((token_count / total_tokens) * 100, 1)
+                    if total_tokens > 0
+                    else 0
+                ),
+            }
+        )
 
     return {
-        'total_entities': total_entities,
-        'total_tokens': total_tokens,
-        'entity_density': round((total_entities / total_tokens) * 100, 1) if total_tokens > 0 else 0,
-        'by_type': stats
+        "total_entities": total_entities,
+        "total_tokens": total_tokens,
+        "entity_density": (
+            round((total_entities / total_tokens) * 100, 1) if total_tokens > 0 else 0
+        ),
+        "by_type": stats,
     }
 
 
@@ -138,25 +157,40 @@ def load_model() -> None:
 
 
 def tokenize_text(text: str) -> List[str]:
+    """Tokenise le texte en excluant les virgules et ponctuation non pertinente"""
     text = text.strip()
     if not text:
         return []
-    return re.findall(r"\w+|[^\w\s]", text, flags=re.UNICODE)
+    # Capture les mots, mais filtre les virgules et ponctuation basique
+    # Garde les ponctuations pertinentes (!, ?, ., :, ;) pour la structure
+    tokens = re.findall(r"\w+|[!?\.;:]", text, flags=re.UNICODE)
+    # Filtrer les tokens vides
+    return [t for t in tokens if t.strip()]
 
 
 def extract_text_from_pdf(file_path: Path) -> str:
+    """Extrait le texte d'un PDF avec encodage UTF-8"""
     text_parts: List[str] = []
     with pdfplumber.open(file_path) as pdf:
         for page in pdf.pages:
             page_text = page.extract_text()
             if page_text:
+                # Nettoyer et normaliser le texte
+                page_text = page_text.encode('utf-8', errors='ignore').decode('utf-8')
                 text_parts.append(page_text)
     return "\n".join(text_parts)
 
 
 def extract_text_from_docx(file_path: Path) -> str:
+    """Extrait le texte d'un fichier Word avec encodage UTF-8"""
     doc = Document(file_path)
-    return "\n".join([p.text for p in doc.paragraphs if p.text])
+    # Normaliser l'encodage pour éviter les problèmes d'affichage
+    paragraphs = []
+    for p in doc.paragraphs:
+        if p.text:
+            text = p.text.encode('utf-8', errors='ignore').decode('utf-8')
+            paragraphs.append(text)
+    return "\n".join(paragraphs)
 
 
 def predict_tokens(tokens: List[str]) -> Tuple[List[str], List[str]]:
@@ -199,10 +233,7 @@ def predict_enhanced(req: PredictTextRequest) -> EnhancedPredictResponse:
     stats = calculate_statistics(entities, len(tokens))
 
     return EnhancedPredictResponse(
-        tokens=tokens,
-        labels=labels,
-        entities=entities,
-        statistics=stats
+        tokens=tokens, labels=labels, entities=entities, statistics=stats
     )
 
 
@@ -213,7 +244,9 @@ async def predict_file(file: UploadFile = File(...)) -> PredictResponse:
 
     suffix = Path(file.filename).suffix.lower()
     if suffix not in {".pdf", ".docx", ".txt"}:
-        raise HTTPException(status_code=400, detail="Format non supporté. Utilisez PDF, DOCX ou TXT.")
+        raise HTTPException(
+            status_code=400, detail="Format non supporté. Utilisez PDF, DOCX ou TXT."
+        )
 
     tmp_dir = Path(".tmp")
     tmp_dir.mkdir(exist_ok=True)
@@ -252,77 +285,88 @@ def export_pdf(data: dict):
 
     # Titre
     title_style = ParagraphStyle(
-        'CustomTitle',
-        parent=styles['Heading1'],
-        fontSize=24,
-        spaceAfter=30
+        "CustomTitle", parent=styles["Heading1"], fontSize=24, spaceAfter=30
     )
     content.append(Paragraph("Rapport d'Analyse NER", title_style))
 
     # Texte original
-    content.append(Paragraph("<b>Texte analysé :</b>", styles['Heading2']))
-    content.append(Paragraph(data.get('text', ''), styles['Normal']))
+    content.append(Paragraph("<b>Texte analysé :</b>", styles["Heading2"]))
+    content.append(Paragraph(data.get("text", ""), styles["Normal"]))
     content.append(Spacer(1, 20))
 
     # Statistiques
-    content.append(Paragraph("<b>Statistiques :</b>", styles['Heading2']))
-    stats = data.get('statistics', {})
+    content.append(Paragraph("<b>Statistiques :</b>", styles["Heading2"]))
+    stats = data.get("statistics", {})
 
     stats_data = [
-        ['Métrique', 'Valeur'],
-        ['Tokens analysés', stats.get('total_tokens', 0)],
-        ['Entités détectées', stats.get('total_entities', 0)],
-        ['Densité d\'entités', f"{stats.get('entity_density', 0)}%"]
+        ["Métrique", "Valeur"],
+        ["Tokens analysés", stats.get("total_tokens", 0)],
+        ["Entités détectées", stats.get("total_entities", 0)],
+        ["Densité d'entités", f"{stats.get('entity_density', 0)}%"],
     ]
 
     stats_table = Table(stats_data)
-    stats_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 14),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black)
-    ]))
+    stats_table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, 0), 14),
+                ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+                ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
+                ("GRID", (0, 0), (-1, -1), 1, colors.black),
+            ]
+        )
+    )
 
     content.append(stats_table)
     content.append(Spacer(1, 20))
 
     # Détail par type
-    content.append(Paragraph("<b>Détail par type d'entité :</b>", styles['Heading2']))
+    content.append(Paragraph("<b>Détail par type d'entité :</b>", styles["Heading2"]))
 
-    entities_by_type = data.get('entities_by_type', [])
+    entities_by_type = data.get("entities_by_type", [])
     if entities_by_type:
-        detail_data = [['Type', 'Nombre', 'Pourcentage']]
+        detail_data = [["Type", "Nombre", "Pourcentage"]]
         for item in entities_by_type:
-            detail_data.append([
-                item.get('label', ''),
-                item.get('count', 0),
-                f"{item.get('percentage', 0)}%"
-            ])
+            detail_data.append(
+                [
+                    item.get("label", ""),
+                    item.get("count", 0),
+                    f"{item.get('percentage', 0)}%",
+                ]
+            )
 
         detail_table = Table(detail_data)
-        detail_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black)
-        ]))
+        detail_table.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.darkblue),
+                    ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                    ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                    ("GRID", (0, 0), (-1, -1), 1, colors.black),
+                ]
+            )
+        )
         content.append(detail_table)
 
     # Liste des entités
     content.append(Spacer(1, 20))
-    content.append(Paragraph("<b>Liste des entités détectées :</b>", styles['Heading2']))
+    content.append(
+        Paragraph("<b>Liste des entités détectées :</b>", styles["Heading2"])
+    )
 
-    entities = data.get('entities', [])
+    entities = data.get("entities", [])
     if entities:
         for i, entity in enumerate(entities, 1):
-            content.append(Paragraph(
-                f"{i}. <b>{entity.get('text', '')}</b> [{entity.get('label', '')}]",
-                styles['Normal']
-            ))
+            content.append(
+                Paragraph(
+                    f"{i}. <b>{entity.get('text', '')}</b> [{entity.get('label', '')}]",
+                    styles["Normal"],
+                )
+            )
 
     # Générer le PDF
     doc.build(content)
@@ -331,5 +375,5 @@ def export_pdf(data: dict):
     return Response(
         content=buffer.getvalue(),
         media_type="application/pdf",
-        headers={"Content-Disposition": "attachment; filename=rapport_ner.pdf"}
+        headers={"Content-Disposition": "attachment; filename=rapport_ner.pdf"},
     )
